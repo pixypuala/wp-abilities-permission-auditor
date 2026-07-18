@@ -1,0 +1,72 @@
+#!/usr/bin/env php
+<?php
+/**
+ * CLI entrypoint for the WordPress abilities/permission auditor.
+ *
+ * Reads a JSON role/capability export (the shape of get_editable_roles(), i.e.
+ * { "role": ["cap", ...] } or { "role": { "cap": true } }) and reports risky
+ * grants. Exits 0 when clean and 1 when any finding is present, so it gates CI.
+ *
+ * @package Pixypuala\AbilitiesAuditor
+ */
+
+declare( strict_types=1 );
+
+namespace Pixypuala\AbilitiesAuditor;
+
+$autoloaders = array(
+	__DIR__ . '/../vendor/autoload.php',
+	__DIR__ . '/../../../autoload.php',
+);
+foreach ( $autoloaders as $autoloader ) {
+	if ( is_readable( $autoloader ) ) {
+		require_once $autoloader;
+		break;
+	}
+}
+
+$args = array_slice( $argv, 1 );
+$file = null;
+$format = 'text';
+foreach ( $args as $arg ) {
+	if ( str_starts_with( $arg, '--format=' ) ) {
+		$format = substr( $arg, 9 );
+	} elseif ( ! str_starts_with( $arg, '-' ) ) {
+		$file = $arg;
+	}
+}
+
+if ( null === $file ) {
+	fwrite( STDERR, "Usage: wp-abilities-auditor <roles.json> [--format=text|json]\n" );
+	exit( 2 );
+}
+if ( ! is_readable( $file ) ) {
+	fwrite( STDERR, sprintf( "Cannot read %s\n", $file ) );
+	exit( 2 );
+}
+
+try {
+	$decoded = json_decode( (string) file_get_contents( $file ), true, 512, JSON_THROW_ON_ERROR );
+} catch ( \JsonException $e ) {
+	fwrite( STDERR, sprintf( "Invalid JSON: %s\n", $e->getMessage() ) );
+	exit( 2 );
+}
+
+// Normalise { role: { cap: true } } to { role: [cap, ...] }.
+$roles = array();
+foreach ( (array) $decoded as $role => $caps ) {
+	if ( is_array( $caps ) && ! array_is_list( $caps ) ) {
+		$roles[ $role ] = array_keys( array_filter( $caps ) );
+	} elseif ( is_array( $caps ) ) {
+		$roles[ $role ] = $caps;
+	}
+}
+
+$auditor  = new Auditor();
+$findings = $auditor->audit( $roles );
+$report   = new Report();
+
+fwrite( STDOUT, 'json' === $format ? $report->to_json( $findings ) : $report->to_text( $findings ) );
+
+// Clean -> 0; any finding -> 1 (CI gate).
+exit( array() === $findings ? 0 : 1 );

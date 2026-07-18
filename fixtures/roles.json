@@ -1,0 +1,7 @@
+{
+	"administrator": ["manage_options", "edit_plugins", "edit_users", "install_plugins"],
+	"editor": ["edit_others_posts", "publish_posts", "unfiltered_html"],
+	"author": ["publish_posts", "upload_files"],
+	"contributor": ["edit_posts", "manage_options"],
+	"subscriber": ["read"]
+}

@@ -45,3 +45,32 @@ A defensive inventory and review tool for WordPress Abilities API registrations 
 ## Non-negotiable rule
 
 A feature is not complete because code exists. It is complete only when its contract, permissions, failure behavior, automated tests, manual evidence where applicable, documentation, migration/deprecation impact and release artifact are all reviewed.
+
+## Getting started
+
+Requires PHP 8.1+ and Composer.
+
+```bash
+composer install
+composer test    # 7 unit tests covering the risk policy
+composer lint    # WordPress coding standards (PHPCS)
+
+# Audit a role/capability export (get_editable_roles() shape):
+php bin/wp-abilities-auditor fixtures/roles.json            # exits 1 if risks found
+php bin/wp-abilities-auditor fixtures/roles.json --format=json
+```
+
+## What is built today
+
+- `Policy` (`src/Policy.php`) — data-driven map of capabilities that are dangerous on any
+  non-administrator role (code execution, account control, configuration), each with a severity.
+- `Auditor` (`src/Auditor.php`) — flags every risky grant, sorted most-severe first; framework-free.
+- `Report` (`src/Report.php`) — text and JSON output.
+- CLI (`bin/wp-abilities-auditor`) — reads a JSON roles export and exits non-zero on findings, so it
+  gates CI. Accepts both `["cap"]` and `{"cap": true}` capability shapes.
+- 7 PHPUnit tests; PHPCS/WPCS clean; CI on PHP 8.1 and 8.3.
+
+## Documented boundary (not yet built)
+
+The in-WordPress WP-CLI command and admin screen that export live roles, and Abilities API
+coverage as that API stabilises.
