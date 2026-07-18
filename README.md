@@ -52,7 +52,7 @@ Requires PHP 8.1+ and Composer.
 
 ```bash
 composer install
-composer test    # 7 unit tests covering the risk policy
+composer test    # 12 unit tests covering the risk policy and JSON export
 composer lint    # WordPress coding standards (PHPCS)
 
 # Audit a role/capability export (get_editable_roles() shape):
@@ -66,9 +66,12 @@ php bin/wp-abilities-auditor fixtures/roles.json --format=json
   non-administrator role (code execution, account control, configuration), each with a severity.
 - `Auditor` (`src/Auditor.php`) — flags every risky grant, sorted most-severe first; framework-free.
 - `Report` (`src/Report.php`) — text and JSON output.
+- `AuditExport` (`src/AuditExport.php`) — serializes the audited roles and findings to a stable,
+  schema-versioned JSON document (sorted keys, no timestamps) so the output is byte-for-byte
+  reproducible and safe to diff, snapshot, or commit as evidence.
 - CLI (`bin/wp-abilities-auditor`) — reads a JSON roles export and exits non-zero on findings, so it
   gates CI. Accepts both `["cap"]` and `{"cap": true}` capability shapes.
-- 7 PHPUnit tests; PHPCS/WPCS clean; CI on PHP 8.1 and 8.3.
+- 12 PHPUnit tests; PHPCS/WPCS clean; CI on PHP 8.1 and 8.3.
 
 ## Documented boundary (not yet built)
 

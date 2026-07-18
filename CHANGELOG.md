@@ -10,4 +10,6 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Repository scaffolding: governance files, docs, and CI skeleton.
 - Risk policy + Auditor: flags dangerous capabilities on non-administrator roles, severity-ranked.
 - Text/JSON Report and a CLI that gates CI (exit 1 on findings).
-- 7 PHPUnit tests; PHPCS/WPCS clean; CI on PHP 8.1 and 8.3.
+- `AuditExport`: deterministic, schema-versioned JSON serializer (sorted role keys and
+  capabilities, no timestamps) for reproducible, diffable audit evidence.
+- 12 PHPUnit tests; PHPCS/WPCS clean; CI on PHP 8.1 and 8.3.
