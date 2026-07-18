@@ -52,21 +52,11 @@ try {
 	exit( 2 );
 }
 
-// Normalise { role: { cap: true } } to { role: [cap, ...] }.
-$roles = array();
-foreach ( (array) $decoded as $role => $caps ) {
-	if ( is_array( $caps ) && ! array_is_list( $caps ) ) {
-		$roles[ $role ] = array_keys( array_filter( $caps ) );
-	} elseif ( is_array( $caps ) ) {
-		$roles[ $role ] = $caps;
-	}
-}
+// Reuse the command's framework-free core so there is one audit code path.
+$roles  = AuditCommand::normalize_roles( (array) $decoded );
+$result = ( new AuditCommand() )->run( $roles, $format );
 
-$auditor  = new Auditor();
-$findings = $auditor->audit( $roles );
-$report   = new Report();
-
-fwrite( STDOUT, 'json' === $format ? $report->to_json( $findings ) : $report->to_text( $findings ) );
+fwrite( STDOUT, $result->output );
 
 // Clean -> 0; any finding -> 1 (CI gate).
-exit( array() === $findings ? 0 : 1 );
+exit( $result->exit_code );

@@ -52,7 +52,7 @@ Requires PHP 8.1+ and Composer.
 
 ```bash
 composer install
-composer test    # 12 unit tests covering the risk policy and JSON export
+composer test    # 24 unit tests covering the risk policy, JSON export, command core, and abilities map
 composer lint    # WordPress coding standards (PHPCS)
 
 # Audit a role/capability export (get_editable_roles() shape):
@@ -71,9 +71,20 @@ php bin/wp-abilities-auditor fixtures/roles.json --format=json
   reproducible and safe to diff, snapshot, or commit as evidence.
 - CLI (`bin/wp-abilities-auditor`) — reads a JSON roles export and exits non-zero on findings, so it
   gates CI. Accepts both `["cap"]` and `{"cap": true}` capability shapes.
-- 12 PHPUnit tests; PHPCS/WPCS clean; CI on PHP 8.1 and 8.3.
+- `AuditCommand` (`src/AuditCommand.php`) — the WP-CLI command and admin screen. Its real work
+  (`normalize_roles()` to accept the `get_editable_roles()` shape, then `run()` to audit, render, and
+  pick an exit code) is framework-free and unit-tested; only the WP-CLI/`add_menu_page` registration
+  and dispatch are thin glue, guarded by `class_exists`/`function_exists` so the file loads anywhere.
+  The standalone `bin` reuses the same core, so there is one audit code path.
+- `AbilitiesMap` (`src/AbilitiesMap.php`) — maps the audit model to an Abilities-API-style structure:
+  one named, categorised ability descriptor per role/capability grant, annotated with whether the
+  audit flagged it and at what severity. Deterministically ordered and framework-free.
+- 24 PHPUnit tests; PHPCS/WPCS clean; CI on PHP 8.1 and 8.3.
 
 ## Documented boundary (not yet built)
 
-The in-WordPress WP-CLI command and admin screen that export live roles, and Abilities API
-coverage as that API stabilises.
+The command core, its exit codes, and the abilities mapping are all built and unit-tested here.
+The single step that irreducibly needs a running WordPress is reading the *live* roles via
+`get_editable_roles()` inside the WP-CLI dispatch and the admin screen; everything downstream of
+that gather step runs and is verified without WordPress. Broader Abilities API coverage follows as
+that API stabilises.
