@@ -61,10 +61,14 @@ php bin/wp-abilities-auditor fixtures/roles.json --format=json
   audit flagged it and at what severity. Deterministically ordered and framework-free.
 - 24 PHPUnit tests; PHPCS/WPCS clean; CI on PHP 8.1 and 8.3.
 
+## Verified against a live install
+
+The WP-CLI command has been run against WordPress 7.0.2 with WooCommerce installed: it read the
+real role set through `get_editable_roles()`, audited it, and reported a genuine finding —
+WordPress grants `unfiltered_html` to the editor role — in both the text and JSON formats. The
+command output is recorded in [`docs/RUNTIME-VERIFICATION.md`](docs/RUNTIME-VERIFICATION.md).
+
 ## Documented boundary (not yet built)
 
-The command core, its exit codes, and the abilities mapping are all built and unit-tested here.
-The single step that irreducibly needs a running WordPress is reading the *live* roles via
-`get_editable_roles()` inside the WP-CLI dispatch and the admin screen; everything downstream of
-that gather step runs and is verified without WordPress. Broader Abilities API coverage follows as
-that API stabilises.
+Broader Abilities API coverage follows as that API stabilises. The admin screen is registered
+but has not been driven through a browser.
